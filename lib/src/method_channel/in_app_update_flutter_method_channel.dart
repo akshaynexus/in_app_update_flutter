@@ -64,19 +64,20 @@ class MethodChannelInAppUpdateFlutter {
 
   Future<UpdateResultAndroid> startImmediateUpdateAndroid({
     bool allowAssetPackDeletion = false,
-  }) async {
-    final result = await _methodChannel.invokeMethod<int>(
-      'startImmediateUpdateAndroid',
-      {'allowAssetPackDeletion': allowAssetPackDeletion},
-    );
-    return UpdateResultAndroid.fromValue(result!);
-  }
+  }) =>
+      _startUpdateAndroid('startImmediateUpdateAndroid', allowAssetPackDeletion);
 
   Future<UpdateResultAndroid> startFlexibleUpdateAndroid({
     bool allowAssetPackDeletion = false,
-  }) async {
+  }) =>
+      _startUpdateAndroid('startFlexibleUpdateAndroid', allowAssetPackDeletion);
+
+  Future<UpdateResultAndroid> _startUpdateAndroid(
+    String method,
+    bool allowAssetPackDeletion,
+  ) async {
     final result = await _methodChannel.invokeMethod<int>(
-      'startFlexibleUpdateAndroid',
+      method,
       {'allowAssetPackDeletion': allowAssetPackDeletion},
     );
     return UpdateResultAndroid.fromValue(result!);
