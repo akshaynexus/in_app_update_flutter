@@ -17,7 +17,8 @@ class MethodChannelInAppUpdateFlutter {
 
   Future<AppUpdateInfo> checkUpdate({String? iosAppStoreRegion}) async {
     if (Platform.isIOS) {
-      final info = await checkUpdateIosImpl(iosAppStoreRegion: iosAppStoreRegion);
+      final info =
+          await checkUpdateIosImpl(iosAppStoreRegion: iosAppStoreRegion);
       return AppUpdateInfo.fromIos(info);
     } else if (Platform.isAndroid) {
       final info = await checkUpdateAndroid();
@@ -26,14 +27,22 @@ class MethodChannelInAppUpdateFlutter {
     throw UnsupportedError('Unsupported platform');
   }
 
-  Future<void> checkAndUpdate({String? iosAppStoreRegion, String? appStoreId, AndroidUpdateType androidUpdateType = AndroidUpdateType.immediate}) async {
+  Future<void> checkAndUpdate(
+      {String? iosAppStoreRegion,
+      String? appStoreId,
+      AndroidUpdateType androidUpdateType =
+          AndroidUpdateType.immediate}) async {
     final info = await checkUpdate(iosAppStoreRegion: iosAppStoreRegion);
     if (info.updateAvailable) {
-      await startUpdate(appStoreId: appStoreId, androidUpdateType: androidUpdateType);
+      await startUpdate(
+          appStoreId: appStoreId, androidUpdateType: androidUpdateType);
     }
   }
 
-  Future<void> startUpdate({String? appStoreId, AndroidUpdateType androidUpdateType = AndroidUpdateType.immediate}) async {
+  Future<void> startUpdate(
+      {String? appStoreId,
+      AndroidUpdateType androidUpdateType =
+          AndroidUpdateType.immediate}) async {
     if (Platform.isIOS) {
       if (appStoreId == null) {
         throw ArgumentError('appStoreId is required on iOS');
@@ -76,7 +85,8 @@ class MethodChannelInAppUpdateFlutter {
   Future<UpdateResultAndroid> startImmediateUpdateAndroid({
     bool allowAssetPackDeletion = false,
   }) =>
-      _startUpdateAndroid('startImmediateUpdateAndroid', allowAssetPackDeletion);
+      _startUpdateAndroid(
+          'startImmediateUpdateAndroid', allowAssetPackDeletion);
 
   Future<UpdateResultAndroid> startFlexibleUpdateAndroid({
     bool allowAssetPackDeletion = false,

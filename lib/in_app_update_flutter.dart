@@ -49,7 +49,8 @@ class InAppUpdateFlutter {
   /// (default: immediate).
   ///
   /// [appStoreId] overrides [UpdateConfig.appStoreId] if provided.
-  Future<void> startUpdate({String? appStoreId, AndroidUpdateType? androidUpdateType}) =>
+  Future<void> startUpdate(
+          {String? appStoreId, AndroidUpdateType? androidUpdateType}) =>
       _impl.startUpdate(
         appStoreId: appStoreId ?? _config.appStoreId,
         androidUpdateType: androidUpdateType ?? _config.androidUpdateType,
@@ -83,8 +84,7 @@ class InAppUpdateFlutter {
   /// iOS: Shows the App Store product page overlay via StoreKit.
   ///
   /// [appStoreId] overrides [UpdateConfig.appStoreId] if provided.
-  Future<void> showUpdateForIos({String? appStoreId}) =>
-      _impl.showUpdateForIos(
+  Future<void> showUpdateForIos({String? appStoreId}) => _impl.showUpdateForIos(
         appStoreId: appStoreId ?? _config.appStoreId ?? '',
       );
 
