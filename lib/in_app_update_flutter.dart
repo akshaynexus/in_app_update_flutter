@@ -28,6 +28,8 @@ class InAppUpdateFlutter {
   /// Cross-platform: Checks for an update and starts the flow if available.
   ///
   /// Convenience method that combines [checkUpdate] and [startUpdate].
+  /// On iOS, [appStoreId] is required to present the App Store page.
+  /// On Android, no additional parameters are needed.
   /// Returns the [AppUpdateInfo] so you can inspect the result.
   Future<AppUpdateInfo> checkAndUpdate({
     String? iosAppStoreRegion,
