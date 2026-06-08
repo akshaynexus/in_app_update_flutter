@@ -2,7 +2,7 @@
 
 A Flutter plugin for in-app updates on both iOS and Android.
 
-On **iOS**, it presents the App Store product page using `SKStoreProductViewController` (StoreKit), keeping users inside the app during the update flow. On **Android**, it integrates with Google Play's In-App Updates API to support both immediate (blocking) and flexible (background) update flows.
+On **iOS**, it checks for updates via the iTunes Lookup API and presents the App Store product page using `SKStoreProductViewController` (StoreKit), keeping users inside the app during the update flow. On **Android**, it integrates with Google Play's In-App Updates API to support both immediate (blocking) and flexible (background) update flows.
 
 ---
 
@@ -16,14 +16,15 @@ On **iOS**, it presents the App Store product page using `SKStoreProductViewCont
 
 ## Features
 
-- iOS: Show the App Store update prompt using `SKStoreProductViewController` without navigating users away from the app
-- iOS: Native Swift implementation with zero AppDelegate configuration required
-- iOS: Supports both Swift Package Manager (SPM) and CocoaPods
-- Android: Check update availability and metadata via the Play Core API
-- Android: Immediate update flow — full-screen, blocking prompt the user must accept
-- Android: Flexible update flow — background download while the user continues using the app
-- Android: Install state stream for monitoring flexible update download progress
-- Works on Flutter with a simple, unified API
+- **iOS**: Check for updates via iTunes Lookup API (pure Dart, no native code)
+- **iOS**: Show the App Store update prompt using `SKStoreProductViewController` without navigating users away from the app
+- **iOS**: Native Swift implementation with zero AppDelegate configuration required
+- **iOS**: Supports both Swift Package Manager (SPM) and CocoaPods
+- **Android**: Check update availability and metadata via the Play Core API
+- **Android**: Immediate update flow — full-screen, blocking prompt the user must accept
+- **Android**: Flexible update flow — background download while the user continues using the app
+- **Android**: Install state stream for monitoring flexible update download progress
+- **Cross-platform**: Unified `checkUpdate()`, `startUpdate()`, and `checkAndUpdate()` APIs
 
 ---
 
@@ -44,15 +45,91 @@ flutter pub get
 
 ---
 
-## iOS Usage
+## Setup
 
-Pass your numeric App Store ID to `showUpdateForIos`. The ID can be found in your App Store Connect URL or the app's public App Store link.
+Create an `InAppUpdateFlutter` instance with an `UpdateConfig` to set your app's defaults:
+
+### Both iOS and Android
 
 ```dart
 import 'package:in_app_update_flutter/in_app_update_flutter.dart';
 
-await InAppUpdateFlutter().showUpdateForIos(appStoreId: '1234567890');
+final updater = InAppUpdateFlutter(UpdateConfig(
+  appStoreId: '1234567890',       // Required for iOS
+  iosAppStoreRegion: 'us',        // Optional: specific App Store region
+));
 ```
+
+### iOS only
+
+```dart
+final updater = InAppUpdateFlutter(UpdateConfig(
+  appStoreId: '1234567890',
+));
+```
+
+### Android only
+
+```dart
+final updater = InAppUpdateFlutter();
+```
+
+No configuration is needed on Android — the Play Core API handles everything natively.
+
+---
+
+## Quick Start
+
+The simplest way to check and update in one call:
+
+```dart
+final info = await updater.checkAndUpdate();
+
+if (info.updateAvailable) {
+  // Update was started (App Store page on iOS, immediate update on Android)
+}
+```
+
+---
+
+## Usage
+
+### Check for updates
+
+```dart
+final info = await updater.checkUpdate();
+
+if (info.updateAvailable) {
+  print('Update available: ${info.storeVersion}');
+}
+```
+
+### Start the update flow
+
+```dart
+// On iOS: presents App Store page via StoreKit
+// On Android: starts immediate (blocking) update
+await updater.startUpdate();
+```
+
+### Per-call overrides
+
+Config values can be overridden on any call:
+
+```dart
+await updater.checkUpdate(iosAppStoreRegion: 'gb');
+await updater.startUpdate(appStoreId: '9876543210');
+await updater.checkAndUpdate(
+  iosAppStoreRegion: 'jp',
+  appStoreId: '9876543210',
+);
+```
+
+---
+
+## iOS Details
+
+Pass your numeric App Store ID to `showUpdateForIos` (or set it in `UpdateConfig`). The ID can be found in your App Store Connect URL or the app's public App Store link.
 
 **How to find your App Store ID:**
 
@@ -66,7 +143,7 @@ await InAppUpdateFlutter().showUpdateForIos(appStoreId: '1234567890');
 
 ---
 
-## Android Usage
+## Android Details
 
 Android uses Google Play's In-App Updates API. The typical flow is:
 
@@ -78,15 +155,11 @@ Android uses Google Play's In-App Updates API. The typical flow is:
 An immediate update presents a full-screen prompt that the user must complete before continuing. Use this for critical updates.
 
 ```dart
-import 'package:in_app_update_flutter/in_app_update_flutter.dart';
-
-final plugin = InAppUpdateFlutter();
-
-final info = await plugin.checkUpdateAndroid();
+final info = await updater.checkUpdateAndroid();
 
 if (info.updateAvailability == UpdateAvailabilityAndroid.updateAvailable &&
     info.isImmediateUpdateAllowed) {
-  final result = await plugin.startImmediateUpdateAndroid();
+  final result = await updater.startImmediateUpdateAndroid();
   // result is UpdateResultAndroid.success or UpdateResultAndroid.userCanceled
 }
 ```
@@ -96,19 +169,15 @@ if (info.updateAvailability == UpdateAvailabilityAndroid.updateAvailable &&
 A flexible update downloads in the background while the user continues using the app. When the download completes, call `completeUpdateAndroid()` to apply the update.
 
 ```dart
-import 'package:in_app_update_flutter/in_app_update_flutter.dart';
-
-final plugin = InAppUpdateFlutter();
-
-final info = await plugin.checkUpdateAndroid();
+final info = await updater.checkUpdateAndroid();
 
 if (info.updateAvailability == UpdateAvailabilityAndroid.updateAvailable &&
     info.isFlexibleUpdateAllowed) {
-  await plugin.startFlexibleUpdateAndroid();
+  await updater.startFlexibleUpdateAndroid();
 
-  plugin.installStateStreamAndroid.listen((state) {
+  updater.installStateStreamAndroid.listen((state) {
     if (state.installStatus == InstallStatusAndroid.downloaded) {
-      plugin.completeUpdateAndroid();
+      updater.completeUpdateAndroid();
     }
   });
 }
