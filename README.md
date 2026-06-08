@@ -55,8 +55,9 @@ Create an `InAppUpdateFlutter` instance with an `UpdateConfig` to set your app's
 import 'package:in_app_update_flutter/in_app_update_flutter.dart';
 
 final updater = InAppUpdateFlutter(UpdateConfig(
-  appStoreId: '1234567890',       // Required for iOS
-  iosAppStoreRegion: 'us',        // Optional: specific App Store region
+  appStoreId: '1234567890',              // Required for iOS
+  iosAppStoreRegion: 'us',               // Optional: specific App Store region
+  androidUpdateType: AndroidUpdateType.flexible, // Optional: immediate (default) or flexible
 ));
 ```
 
@@ -71,22 +72,20 @@ final updater = InAppUpdateFlutter(UpdateConfig(
 ### Android only
 
 ```dart
-final updater = InAppUpdateFlutter();
+final updater = InAppUpdateFlutter(UpdateConfig(
+  androidUpdateType: AndroidUpdateType.flexible, // or .immediate (default)
+));
 ```
-
-No configuration is needed on Android — the Play Core API handles everything natively.
 
 ---
 
 ## Quick Start
 
-The simplest way to check and update in one call:
-
 ```dart
 await updater.checkAndUpdate();
 ```
 
-That's it. If an update is available, it starts the flow automatically (App Store page on iOS, immediate update on Android).
+If an update is available, it starts the flow automatically using your config defaults.
 
 ---
 

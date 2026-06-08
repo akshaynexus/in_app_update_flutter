@@ -45,24 +45,30 @@ class InAppUpdateFlutter {
   /// Cross-platform: Starts the update flow.
   ///
   /// On iOS, presents the App Store product page via StoreKit.
-  /// On Android, starts the immediate (blocking) update flow.
+  /// On Android, starts the update flow using [UpdateConfig.androidUpdateType]
+  /// (default: immediate).
   ///
   /// [appStoreId] overrides [UpdateConfig.appStoreId] if provided.
-  Future<void> startUpdate({String? appStoreId}) =>
-      _impl.startUpdate(appStoreId: appStoreId ?? _config.appStoreId);
+  Future<void> startUpdate({String? appStoreId, AndroidUpdateType? androidUpdateType}) =>
+      _impl.startUpdate(
+        appStoreId: appStoreId ?? _config.appStoreId,
+        androidUpdateType: androidUpdateType ?? _config.androidUpdateType,
+      );
 
   /// Cross-platform: Checks for an update and starts the flow if available.
   ///
   /// Convenience method that combines [checkUpdate] and [startUpdate].
   /// On iOS, [appStoreId] (or [UpdateConfig.appStoreId]) is required.
-  /// On Android, no additional parameters are needed.
+  /// On Android, uses [UpdateConfig.androidUpdateType] by default.
   Future<void> checkAndUpdate({
     String? iosAppStoreRegion,
     String? appStoreId,
+    AndroidUpdateType? androidUpdateType,
   }) =>
       _impl.checkAndUpdate(
         iosAppStoreRegion: iosAppStoreRegion ?? _config.iosAppStoreRegion,
         appStoreId: appStoreId ?? _config.appStoreId,
+        androidUpdateType: androidUpdateType ?? _config.androidUpdateType,
       );
 
   /// Shows the platform-specific in-app update UI.

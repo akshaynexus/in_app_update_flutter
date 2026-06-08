@@ -1,3 +1,12 @@
+/// The type of update flow to use on Android.
+enum AndroidUpdateType {
+  /// Full-screen, blocking update the user must accept.
+  immediate,
+
+  /// Background download while the user continues using the app.
+  flexible,
+}
+
 /// Configuration for [InAppUpdateFlutter].
 ///
 /// Provides default values for all update operations so you don't need to
@@ -14,8 +23,15 @@ class UpdateConfig {
   /// If `null`, the default region is used.
   final String? iosAppStoreRegion;
 
+  /// The default update type on Android.
+  ///
+  /// Used by [InAppUpdateFlutter.startUpdate] and [checkAndUpdate].
+  /// Defaults to [AndroidUpdateType.immediate].
+  final AndroidUpdateType androidUpdateType;
+
   const UpdateConfig({
     this.appStoreId,
     this.iosAppStoreRegion,
+    this.androidUpdateType = AndroidUpdateType.immediate,
   });
 }

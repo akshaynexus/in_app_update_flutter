@@ -26,21 +26,25 @@ class MethodChannelInAppUpdateFlutter {
     throw UnsupportedError('Unsupported platform');
   }
 
-  Future<void> checkAndUpdate({String? iosAppStoreRegion, String? appStoreId}) async {
+  Future<void> checkAndUpdate({String? iosAppStoreRegion, String? appStoreId, AndroidUpdateType androidUpdateType = AndroidUpdateType.immediate}) async {
     final info = await checkUpdate(iosAppStoreRegion: iosAppStoreRegion);
     if (info.updateAvailable) {
-      await startUpdate(appStoreId: appStoreId);
+      await startUpdate(appStoreId: appStoreId, androidUpdateType: androidUpdateType);
     }
   }
 
-  Future<void> startUpdate({String? appStoreId}) async {
+  Future<void> startUpdate({String? appStoreId, AndroidUpdateType androidUpdateType = AndroidUpdateType.immediate}) async {
     if (Platform.isIOS) {
       if (appStoreId == null) {
         throw ArgumentError('appStoreId is required on iOS');
       }
       await showUpdateForIos(appStoreId: appStoreId);
     } else if (Platform.isAndroid) {
-      await startImmediateUpdateAndroid();
+      if (androidUpdateType == AndroidUpdateType.flexible) {
+        await startFlexibleUpdateAndroid();
+      } else {
+        await startImmediateUpdateAndroid();
+      }
     } else {
       throw UnsupportedError('Unsupported platform');
     }
