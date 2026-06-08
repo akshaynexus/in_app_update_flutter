@@ -1,38 +1,60 @@
-import 'package:flutter/services.dart';
-import 'package:in_app_update_flutter/src/models/models.dart';
-import 'package:in_app_update_flutter/src/platform_interface/in_app_update_flutter_platform_interface.dart';
+import 'dart:io';
 
-/// An implementation of [InAppUpdateFlutterPlatform] that uses method channels.
-class MethodChannelInAppUpdateFlutter extends InAppUpdateFlutterPlatform {
-  /// The method channel used to interact with the native platform.
+import 'package:flutter/services.dart';
+import 'package:in_app_update_flutter/src/ios_update_check.dart';
+import 'package:in_app_update_flutter/src/models/models.dart';
+
+/// Handles platform communication via method channels for Android
+/// and delegates to pure Dart for iOS update checks.
+class MethodChannelInAppUpdateFlutter {
   static const MethodChannel _methodChannel = MethodChannel(
     'in_app_update_flutter',
   );
 
-  /// The event channel for receiving install state updates during flexible updates.
   static const EventChannel _eventChannel = EventChannel(
     'in_app_update_flutter/installStateAndroid',
   );
 
-  @override
+  Future<AppUpdateInfo> checkUpdate({String? iosAppStoreRegion}) async {
+    if (Platform.isIOS) {
+      final info = await checkUpdateIosImpl(iosAppStoreRegion: iosAppStoreRegion);
+      return AppUpdateInfo.fromIos(info);
+    } else if (Platform.isAndroid) {
+      final info = await checkUpdateAndroid();
+      return AppUpdateInfo.fromAndroid(info);
+    }
+    throw UnsupportedError('Unsupported platform');
+  }
+
+  Future<void> startUpdate({String? appStoreId}) async {
+    if (Platform.isIOS) {
+      if (appStoreId == null) {
+        throw ArgumentError('appStoreId is required on iOS');
+      }
+      await showUpdateForIos(appStoreId: appStoreId);
+    } else if (Platform.isAndroid) {
+      await startImmediateUpdateAndroid();
+    } else {
+      throw UnsupportedError('Unsupported platform');
+    }
+  }
+
   @Deprecated(
     'Use showUpdateForIos() on iOS or checkUpdateAndroid() + '
     'startImmediateUpdateAndroid()/startFlexibleUpdateAndroid() on Android',
   )
-  Future<void> showUpdate({required String appStoreId}) async {
-    await _methodChannel.invokeMethod('showStoreUpdateIos', {
-      'appStoreId': appStoreId,
-    });
-  }
+  Future<void> showUpdate({required String appStoreId}) =>
+      showUpdateForIos(appStoreId: appStoreId);
 
-  @override
   Future<void> showUpdateForIos({required String appStoreId}) async {
     await _methodChannel.invokeMethod('showStoreUpdateIos', {
       'appStoreId': appStoreId,
     });
   }
 
-  @override
+  Future<AppUpdateInfoIos> checkUpdateIos({String? iosAppStoreRegion}) =>
+      checkUpdateIosImpl(iosAppStoreRegion: iosAppStoreRegion);
+
   Future<AppUpdateInfoAndroid> checkUpdateAndroid() async {
     final result = await _methodChannel.invokeMapMethod<String, dynamic>(
       'checkForUpdateAndroid',
@@ -40,7 +62,6 @@ class MethodChannelInAppUpdateFlutter extends InAppUpdateFlutterPlatform {
     return AppUpdateInfoAndroid.fromMap(result!);
   }
 
-  @override
   Future<UpdateResultAndroid> startImmediateUpdateAndroid({
     bool allowAssetPackDeletion = false,
   }) async {
@@ -51,7 +72,6 @@ class MethodChannelInAppUpdateFlutter extends InAppUpdateFlutterPlatform {
     return UpdateResultAndroid.fromValue(result!);
   }
 
-  @override
   Future<UpdateResultAndroid> startFlexibleUpdateAndroid({
     bool allowAssetPackDeletion = false,
   }) async {
@@ -62,12 +82,10 @@ class MethodChannelInAppUpdateFlutter extends InAppUpdateFlutterPlatform {
     return UpdateResultAndroid.fromValue(result!);
   }
 
-  @override
   Future<void> completeUpdateAndroid() async {
     await _methodChannel.invokeMethod<void>('completeUpdateAndroid');
   }
 
-  @override
   Stream<InstallStateAndroid> get installStateStreamAndroid {
     return _eventChannel.receiveBroadcastStream().map((event) {
       return InstallStateAndroid.fromMap(
