@@ -40,9 +40,12 @@ test/                                     # Unit tests
 ## Commands
 
 ```bash
+dart format lib/
 flutter analyze
 flutter test
 ```
+
+Always run `dart format lib/` before committing.
 
 ## Dependencies
 
