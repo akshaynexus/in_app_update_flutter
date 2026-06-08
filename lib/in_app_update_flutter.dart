@@ -56,8 +56,7 @@ class InAppUpdateFlutter {
   /// Convenience method that combines [checkUpdate] and [startUpdate].
   /// On iOS, [appStoreId] (or [UpdateConfig.appStoreId]) is required.
   /// On Android, no additional parameters are needed.
-  /// Returns the [AppUpdateInfo] so you can inspect the result.
-  Future<AppUpdateInfo> checkAndUpdate({
+  Future<void> checkAndUpdate({
     String? iosAppStoreRegion,
     String? appStoreId,
   }) =>

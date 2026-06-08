@@ -83,12 +83,10 @@ No configuration is needed on Android — the Play Core API handles everything n
 The simplest way to check and update in one call:
 
 ```dart
-final info = await updater.checkAndUpdate();
-
-if (info.updateAvailable) {
-  // Update was started (App Store page on iOS, immediate update on Android)
-}
+await updater.checkAndUpdate();
 ```
+
+That's it. If an update is available, it starts the flow automatically (App Store page on iOS, immediate update on Android).
 
 ---
 
