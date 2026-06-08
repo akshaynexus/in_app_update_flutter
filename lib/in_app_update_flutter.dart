@@ -25,6 +25,19 @@ class InAppUpdateFlutter {
   Future<void> startUpdate({String? appStoreId}) =>
       _impl.startUpdate(appStoreId: appStoreId);
 
+  /// Cross-platform: Checks for an update and starts the flow if available.
+  ///
+  /// Convenience method that combines [checkUpdate] and [startUpdate].
+  /// Returns the [AppUpdateInfo] so you can inspect the result.
+  Future<AppUpdateInfo> checkAndUpdate({
+    String? iosAppStoreRegion,
+    String? appStoreId,
+  }) =>
+      _impl.checkAndUpdate(
+        iosAppStoreRegion: iosAppStoreRegion,
+        appStoreId: appStoreId,
+      );
+
   /// Shows the platform-specific in-app update UI.
   ///
   /// [appStoreId] is the numeric App Store ID of your app
