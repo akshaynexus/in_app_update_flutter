@@ -5,30 +5,56 @@ export 'package:in_app_update_flutter/src/models/models.dart';
 
 /// A Flutter plugin for in-app updates.
 ///
-/// Use [checkUpdate] and [startUpdate] for a cross-platform experience,
-/// or call platform-specific methods directly for more control.
+/// Create an instance with [UpdateConfig] to set defaults, then call
+/// [checkUpdate], [startUpdate], or [checkAndUpdate].
+///
+/// ```dart
+/// final updater = InAppUpdateFlutter(UpdateConfig(
+///   appStoreId: '123456789',
+///   iosAppStoreRegion: 'us',
+/// ));
+///
+/// // Simple: check and update in one call
+/// final info = await updater.checkAndUpdate();
+///
+/// // Or step by step
+/// final info = await updater.checkUpdate();
+/// if (info.updateAvailable) await updater.startUpdate();
+/// ```
 class InAppUpdateFlutter {
   final _impl = MethodChannelInAppUpdateFlutter();
+  final UpdateConfig _config;
+
+  /// Creates an [InAppUpdateFlutter] instance.
+  ///
+  /// If [config] is provided, its values are used as defaults for all
+  /// operations. Per-call parameters always override config values.
+  InAppUpdateFlutter([this._config = const UpdateConfig()]);
 
   /// Cross-platform: Checks whether an update is available.
   ///
   /// On iOS, queries the iTunes Lookup API. On Android, uses Play Core.
   /// Returns a unified [AppUpdateInfo] with platform-specific details.
+  ///
+  /// [iosAppStoreRegion] overrides [UpdateConfig.iosAppStoreRegion] if provided.
   Future<AppUpdateInfo> checkUpdate({String? iosAppStoreRegion}) =>
-      _impl.checkUpdate(iosAppStoreRegion: iosAppStoreRegion);
+      _impl.checkUpdate(
+        iosAppStoreRegion: iosAppStoreRegion ?? _config.iosAppStoreRegion,
+      );
 
   /// Cross-platform: Starts the update flow.
   ///
-  /// On iOS, presents the App Store product page via StoreKit
-  /// ([appStoreId] is required).
+  /// On iOS, presents the App Store product page via StoreKit.
   /// On Android, starts the immediate (blocking) update flow.
+  ///
+  /// [appStoreId] overrides [UpdateConfig.appStoreId] if provided.
   Future<void> startUpdate({String? appStoreId}) =>
-      _impl.startUpdate(appStoreId: appStoreId);
+      _impl.startUpdate(appStoreId: appStoreId ?? _config.appStoreId);
 
   /// Cross-platform: Checks for an update and starts the flow if available.
   ///
   /// Convenience method that combines [checkUpdate] and [startUpdate].
-  /// On iOS, [appStoreId] is required to present the App Store page.
+  /// On iOS, [appStoreId] (or [UpdateConfig.appStoreId]) is required.
   /// On Android, no additional parameters are needed.
   /// Returns the [AppUpdateInfo] so you can inspect the result.
   Future<AppUpdateInfo> checkAndUpdate({
@@ -36,14 +62,11 @@ class InAppUpdateFlutter {
     String? appStoreId,
   }) =>
       _impl.checkAndUpdate(
-        iosAppStoreRegion: iosAppStoreRegion,
-        appStoreId: appStoreId,
+        iosAppStoreRegion: iosAppStoreRegion ?? _config.iosAppStoreRegion,
+        appStoreId: appStoreId ?? _config.appStoreId,
       );
 
   /// Shows the platform-specific in-app update UI.
-  ///
-  /// [appStoreId] is the numeric App Store ID of your app
-  /// (found in your App Store Connect URL).
   @Deprecated(
     'Use showUpdateForIos() on iOS or checkUpdateAndroid() + '
     'startImmediateUpdateAndroid()/startFlexibleUpdateAndroid() on Android',
@@ -54,35 +77,25 @@ class InAppUpdateFlutter {
 
   /// iOS: Shows the App Store product page overlay via StoreKit.
   ///
-  /// [appStoreId] is the numeric App Store ID of your app
-  /// (found in your App Store Connect URL).
-  Future<void> showUpdateForIos({required String appStoreId}) =>
-      _impl.showUpdateForIos(appStoreId: appStoreId);
+  /// [appStoreId] overrides [UpdateConfig.appStoreId] if provided.
+  Future<void> showUpdateForIos({String? appStoreId}) =>
+      _impl.showUpdateForIos(
+        appStoreId: appStoreId ?? _config.appStoreId ?? '',
+      );
 
   /// iOS: Checks whether an update is available via the iTunes Lookup API.
   ///
-  /// Queries the App Store for the latest published version and compares it
-  /// against the currently installed version using semantic versioning.
-  ///
-  /// An optional [iosAppStoreRegion] can be provided to check a specific
-  /// App Store region (e.g., `"us"`, `"gb"`).
+  /// [iosAppStoreRegion] overrides [UpdateConfig.iosAppStoreRegion] if provided.
   Future<AppUpdateInfoIos> checkUpdateIos({String? iosAppStoreRegion}) =>
-      _impl.checkUpdateIos(iosAppStoreRegion: iosAppStoreRegion);
+      _impl.checkUpdateIos(
+        iosAppStoreRegion: iosAppStoreRegion ?? _config.iosAppStoreRegion,
+      );
 
   /// Android: Checks whether an in-app update is available via Play Core.
-  ///
-  /// Returns an [AppUpdateInfoAndroid] containing update metadata such as
-  /// availability, version code, priority, staleness, and allowed update types.
   Future<AppUpdateInfoAndroid> checkUpdateAndroid() =>
       _impl.checkUpdateAndroid();
 
   /// Android: Starts the immediate (full-screen, blocking) update flow.
-  ///
-  /// The user must accept the update to continue using the app. If the user
-  /// closes the update screen, [UpdateResultAndroid.userCanceled] is returned.
-  ///
-  /// If [allowAssetPackDeletion] is `true`, the system may delete asset packs
-  /// to free up storage for the update.
   Future<UpdateResultAndroid> startImmediateUpdateAndroid({
     bool allowAssetPackDeletion = false,
   }) =>
@@ -91,13 +104,6 @@ class InAppUpdateFlutter {
       );
 
   /// Android: Starts the flexible (background download) update flow.
-  ///
-  /// The update downloads in the background while the user continues
-  /// using the app. Listen to [installStateStreamAndroid] for download
-  /// progress, and call [completeUpdateAndroid] when the download is complete.
-  ///
-  /// If [allowAssetPackDeletion] is `true`, the system may delete asset packs
-  /// to free up storage for the update.
   Future<UpdateResultAndroid> startFlexibleUpdateAndroid({
     bool allowAssetPackDeletion = false,
   }) =>
@@ -106,14 +112,9 @@ class InAppUpdateFlutter {
       );
 
   /// Android: Completes a flexible update by triggering an app restart.
-  ///
-  /// Call this after [installStateStreamAndroid] reports
-  /// [InstallStatusAndroid.downloaded].
   Future<void> completeUpdateAndroid() => _impl.completeUpdateAndroid();
 
   /// Android: A stream of install state changes during a flexible update.
-  ///
-  /// Emits [InstallStateAndroid] events with download progress and status.
   Stream<InstallStateAndroid> get installStateStreamAndroid =>
       _impl.installStateStreamAndroid;
 }
