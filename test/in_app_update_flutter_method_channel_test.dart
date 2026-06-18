@@ -76,6 +76,52 @@ void main() {
       });
     });
 
+    group('checkUpdateIos', () {
+      test('calls checkUpdateIos and deserializes response', () async {
+        String? invokedMethod;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(methodChannel, (call) async {
+          invokedMethod = call.method;
+          return {
+            'storeVersion': '2.1.0',
+            'installedVersion': '2.0.0',
+            'updateAvailable': true,
+            'bundleId': 'com.example.app',
+          };
+        });
+
+        final info = await plugin.checkUpdateIos();
+        expect(invokedMethod, 'checkUpdateIos');
+        expect(info.storeVersion, '2.1.0');
+        expect(info.installedVersion, '2.0.0');
+        expect(info.updateAvailable, true);
+        expect(info.bundleId, 'com.example.app');
+      });
+
+      test('defaults to empty/false when channel returns null', () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(methodChannel, (call) async => null);
+
+        final info = await plugin.checkUpdateIos();
+        expect(info.storeVersion, '');
+        expect(info.installedVersion, '');
+        expect(info.updateAvailable, false);
+        expect(info.bundleId, '');
+      });
+
+      test('propagates platform errors', () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(methodChannel, (call) async {
+          throw PlatformException(code: 'LOOKUP_ERROR');
+        });
+
+        expect(
+          () => plugin.checkUpdateIos(),
+          throwsA(isA<PlatformException>()),
+        );
+      });
+    });
+
     group('checkUpdateAndroid', () {
       test('calls checkForUpdateAndroid and deserializes response', () async {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

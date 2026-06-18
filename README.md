@@ -2,7 +2,7 @@
 
 A Flutter plugin for in-app updates on both iOS and Android.
 
-On **iOS**, it presents the App Store product page using `SKStoreProductViewController` (StoreKit), keeping users inside the app during the update flow. On **Android**, it integrates with Google Play's In-App Updates API to support both immediate (blocking) and flexible (background) update flows.
+On **iOS**, it checks for updates via the iTunes Lookup API and presents the App Store product page using `SKStoreProductViewController` (StoreKit), keeping users inside the app during the update flow. On **Android**, it integrates with Google Play's In-App Updates API to support both immediate (blocking) and flexible (background) update flows.
 
 ---
 
@@ -16,6 +16,7 @@ On **iOS**, it presents the App Store product page using `SKStoreProductViewCont
 
 ## Features
 
+- iOS: Check for updates via the iTunes Lookup API natively (no extra Dart packages), auto-scoped to the device's region
 - iOS: Show the App Store update prompt using `SKStoreProductViewController` without navigating users away from the app
 - iOS: Native Swift implementation with zero AppDelegate configuration required
 - iOS: Supports both Swift Package Manager (SPM) and CocoaPods
@@ -45,6 +46,40 @@ flutter pub get
 ---
 
 ## iOS Usage
+
+### Check for an update
+
+Call `checkUpdateIos()` to query the iTunes Lookup API and compare the latest
+App Store version against the currently installed version. The check runs
+natively in the Swift plugin (via `URLSession`), so no extra Dart packages and
+no App Store ID are required — the app's bundle ID is used.
+
+The lookup is automatically scoped to the **device's region setting**
+(`Locale.current`), so apps that aren't published in the US store are looked up
+in the right region without any configuration.
+
+```dart
+import 'package:in_app_update_flutter/in_app_update_flutter.dart';
+
+final plugin = InAppUpdateFlutter();
+
+final info = await plugin.checkUpdateIos();
+
+if (info.updateAvailable) {
+  print('Update available: ${info.storeVersion} (installed ${info.installedVersion})');
+}
+```
+
+#### AppUpdateInfoIos fields
+
+| Field | Type | Description |
+|---|---|---|
+| `storeVersion` | `String` | Latest version published on the App Store |
+| `installedVersion` | `String` | Version currently installed |
+| `updateAvailable` | `bool` | `true` if `storeVersion` > `installedVersion` |
+| `bundleId` | `String` | Bundle ID used for the lookup |
+
+### Show the update prompt
 
 Pass your numeric App Store ID to `showUpdateForIos`. The ID can be found in your App Store Connect URL or the app's public App Store link.
 
