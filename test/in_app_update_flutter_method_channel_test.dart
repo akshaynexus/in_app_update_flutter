@@ -109,6 +109,26 @@ void main() {
         expect(info.bundleId, '');
       });
 
+      test('returns updateAvailable false on lookup failure (not found)',
+          () async {
+        // Native side returns this payload when the app isn't found / the
+        // lookup fails — the contract is to report no update, never throw.
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(methodChannel, (call) async {
+          return {
+            'storeVersion': '',
+            'installedVersion': '1.0.0',
+            'updateAvailable': false,
+            'bundleId': 'com.example.app',
+          };
+        });
+
+        final info = await plugin.checkUpdateIos();
+        expect(info.updateAvailable, false);
+        expect(info.storeVersion, '');
+        expect(info.installedVersion, '1.0.0');
+      });
+
       test('propagates platform errors', () async {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(methodChannel, (call) async {

@@ -57,7 +57,8 @@ public class InAppUpdateFlutterPlugin: NSObject, FlutterPlugin, SKStoreProductVi
     }
 
     guard !bundleId.isEmpty,
-          let url = URL(string: "https://itunes.apple.com\(regionPath)/lookup?bundleId=\(bundleId)") else {
+          let encodedBundleId = bundleId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+          let url = URL(string: "https://itunes.apple.com\(regionPath)/lookup?bundleId=\(encodedBundleId)") else {
       reply("", false)
       return
     }
@@ -71,7 +72,10 @@ public class InAppUpdateFlutterPlugin: NSObject, FlutterPlugin, SKStoreProductVi
         reply("", false)
         return
       }
-      let updateAvailable = storeVersion.compare(installedVersion, options: .numeric) == .orderedDescending
+      // Only report an update when the installed version is known; an empty
+      // installed version is non-comparable and must not be treated as stale.
+      let updateAvailable = !installedVersion.isEmpty &&
+        storeVersion.compare(installedVersion, options: .numeric) == .orderedDescending
       reply(storeVersion, updateAvailable)
     }.resume()
   }
