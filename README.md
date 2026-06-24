@@ -34,7 +34,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  in_app_update_flutter: ^2.0.3
+  in_app_update_flutter: ^3.0.0
 ```
 
 Then run:
@@ -95,7 +95,7 @@ await InAppUpdateFlutter().showUpdateForIos(appStoreId: '1234567890');
 2. The numeric portion after `id` is your App Store ID.
 
 **iOS notes:**
-- Requires iOS 12.0 or later
+- Requires iOS 13.0 or later
 - Does not work on simulators
 - Not supported in TestFlight builds — test on a real device using a development or App Store build
 

@@ -37,6 +37,9 @@ class IosUpdateExample extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () async {
             try {
+              // Public App Store ID used only for this demo (YouTube).
+              // Replace with your own app's numeric App Store ID in a real
+              // integration.
               await InAppUpdateFlutter()
                   .showUpdateForIos(appStoreId: '544007664');
             } catch (e) {

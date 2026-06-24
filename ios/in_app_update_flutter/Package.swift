@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "in_app_update_flutter",
     platforms: [
-        .iOS(.v12)
+        .iOS(.v13)
     ],
     products: [
         .library(name: "in-app-update-flutter", targets: ["in_app_update_flutter"])
