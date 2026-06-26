@@ -19,8 +19,11 @@ class _MockPlatform extends InAppUpdateFlutterPlatform {
     lastAppStoreId = appStoreId;
   }
 
+  String? lastRegion;
+
   @override
-  Future<AppUpdateInfoIos> checkUpdateIos() async {
+  Future<AppUpdateInfoIos> checkUpdateIos({String? region}) async {
+    lastRegion = region;
     return const AppUpdateInfoIos(
       storeVersion: '2.0.0',
       installedVersion: '1.0.0',
@@ -181,6 +184,14 @@ void main() {
         expect(info.installedVersion, '1.0.0');
         expect(info.updateAvailable, isTrue);
         expect(info.bundleId, 'com.example.app');
+      });
+
+      test('checkUpdateIos forwards the region override', () async {
+        final mock = _MockPlatform();
+        InAppUpdateFlutterPlatform.instance = mock;
+
+        await InAppUpdateFlutterPlatform.instance.checkUpdateIos(region: 'gb');
+        expect(mock.lastRegion, 'gb');
       });
 
       test('checkUpdateAndroid returns expected info', () async {

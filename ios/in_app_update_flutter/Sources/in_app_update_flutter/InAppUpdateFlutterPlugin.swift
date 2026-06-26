@@ -39,26 +39,18 @@ public class InAppUpdateFlutterPlugin: NSObject, FlutterPlugin, SKStoreProductVi
       flutterResult = result
       showStoreProductView(appStoreId: appStoreId)
     case "checkUpdateIos":
-      checkUpdate(result: result)
+      let regionOverride = (call.arguments as? [String: Any])?["region"] as? String
+      checkUpdate(regionOverride: regionOverride, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
   }
 
-  private func checkUpdate(result: @escaping FlutterResult) {
+  private func checkUpdate(regionOverride: String?, result: @escaping FlutterResult) {
     let bundleId = Bundle.main.bundleIdentifier ?? ""
     let installedVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 
-    // Region comes from the device's language & region settings as an ISO
-    // 3166-1 alpha-2 code (e.g. "us", "gb") — the same form the iTunes Lookup
-    // API expects, so no conversion table is needed. Without a region the API
-    // defaults to the US store, which would miss apps not listed there.
-    let regionCode: String
-    if #available(iOS 16, *) {
-      regionCode = Locale.current.region?.identifier.lowercased() ?? ""
-    } else {
-      regionCode = Locale.current.regionCode?.lowercased() ?? ""
-    }
+    let regionCode = Self.resolveRegion(override: regionOverride)
     let regionPath = regionCode.isEmpty ? "" : "/\(regionCode)"
 
     func reply(_ storeVersion: String, _ updateAvailable: Bool) {
@@ -93,6 +85,29 @@ public class InAppUpdateFlutterPlugin: NSObject, FlutterPlugin, SKStoreProductVi
         storeVersion.compare(installedVersion, options: .numeric) == .orderedDescending
       reply(storeVersion, updateAvailable)
     }.resume()
+  }
+
+  /// Resolves the ISO 3166-1 alpha-2 region used to scope the iTunes Lookup
+  /// URL, in order of preference:
+  ///
+  ///   1. An explicit `override` supplied by the caller (already alpha-2). Use
+  ///      this when the device region doesn't match the App Store storefront
+  ///      the app is published in (e.g. an expat or QA device).
+  ///   2. The device's language & region setting (`Locale.current`), already in
+  ///      the alpha-2 form the API expects — no conversion table needed.
+  ///
+  /// Without any region the API defaults to the US store, which would miss
+  /// apps not listed there.
+  static func resolveRegion(override: String?) -> String {
+    if let override = override?.trimmingCharacters(in: .whitespacesAndNewlines),
+       !override.isEmpty {
+      return override.lowercased()
+    }
+
+    if #available(iOS 16, *) {
+      return Locale.current.region?.identifier.lowercased() ?? ""
+    }
+    return Locale.current.regionCode?.lowercased() ?? ""
   }
 
   private func showStoreProductView(appStoreId: String) {

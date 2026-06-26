@@ -33,9 +33,10 @@ class MethodChannelInAppUpdateFlutter extends InAppUpdateFlutterPlatform {
   }
 
   @override
-  Future<AppUpdateInfoIos> checkUpdateIos() async {
+  Future<AppUpdateInfoIos> checkUpdateIos({String? region}) async {
     final result = await _methodChannel.invokeMapMethod<String, dynamic>(
       'checkUpdateIos',
+      region != null ? {'region': region} : null,
     );
     return AppUpdateInfoIos.fromMap(result ?? const {});
   }

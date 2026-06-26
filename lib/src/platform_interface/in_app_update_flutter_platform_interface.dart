@@ -53,9 +53,12 @@ abstract class InAppUpdateFlutterPlatform extends PlatformInterface {
   ///
   /// Queries the App Store for the latest published version and compares it
   /// against the currently installed version. The lookup is scoped to the
-  /// device's region setting (`Locale.current`), so no region needs to be
-  /// passed.
-  Future<AppUpdateInfoIos> checkUpdateIos() {
+  /// device's region setting (`Locale.current`) by default.
+  ///
+  /// Pass [region] (an ISO 3166-1 alpha-2 code, e.g. `'us'`, `'gb'`) to target a
+  /// specific App Store region instead — useful when the device region differs
+  /// from the storefront the app is published in.
+  Future<AppUpdateInfoIos> checkUpdateIos({String? region}) {
     throw UnimplementedError('checkUpdateIos() has not been implemented.');
   }
 

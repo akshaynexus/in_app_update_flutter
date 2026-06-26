@@ -98,6 +98,30 @@ void main() {
         expect(info.bundleId, 'com.example.app');
       });
 
+      test('omits region argument when not provided', () async {
+        Object? invokedArgs;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(methodChannel, (call) async {
+          invokedArgs = call.arguments;
+          return null;
+        });
+
+        await plugin.checkUpdateIos();
+        expect(invokedArgs, isNull);
+      });
+
+      test('forwards region override as a channel argument', () async {
+        Object? invokedArgs;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(methodChannel, (call) async {
+          invokedArgs = call.arguments;
+          return null;
+        });
+
+        await plugin.checkUpdateIos(region: 'gb');
+        expect(invokedArgs, {'region': 'gb'});
+      });
+
       test('defaults to empty/false when channel returns null', () async {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(methodChannel, (call) async => null);
